@@ -1,0 +1,29 @@
+{
+    "name": "dmstr/symfony-job-queue-bundle",
+    "description": "Persisted job tracking on top of Symfony Messenger: Job entity with status, JobQueueService for dispatch, JobMessage/JobMessageHandler for async execution.",
+    "type": "symfony-bundle",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "diemeisterei GmbH",
+            "homepage": "https://diemeisterei.de"
+        }
+    ],
+    "require": {
+        "php": ">=8.2",
+        "symfony/framework-bundle": "^7.0",
+        "symfony/messenger": "^7.0",
+        "doctrine/orm": "^3.0",
+        "doctrine/doctrine-bundle": "^2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Dmstr\\SymfonyJobQueue\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Dmstr\\SymfonyJobQueue\\Tests\\": "tests/"
+        }
+    }
+}

@@ -1,0 +1,20 @@
+# file generated with AI assistance: Claude Code - 2026-06-10 11:30:00 UTC
+
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        public: false
+
+    Dmstr\SymfonyJobQueue\Service\JobQueueService:
+        public: true
+
+    Dmstr\SymfonyJobQueue\Service\Job\JobProcessorRegistry:
+        public: true
+        arguments:
+            $processors: !tagged_iterator dmstr.job_queue.processor
+
+    Dmstr\SymfonyJobQueue\MessageHandler\JobMessageHandler:
+        autowire: true
+        tags:
+            - { name: messenger.message_handler }
