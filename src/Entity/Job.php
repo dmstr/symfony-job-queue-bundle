@@ -34,7 +34,7 @@ use Symfony\Component\Uid\Uuid;
     security: "is_granted('ROLE_USER')",
     normalizationContext: ['groups' => ['job:read']],
     paginationItemsPerPage: 30,
-    openapi: new Operation(tags: ['ZA7 Core'])
+    openapi: new Operation(tags: ['System'])
 )]
 #[ApiFilter(SearchFilter::class, properties: [
     'type' => 'exact',
