@@ -1,5 +1,5 @@
 <?php
-// file generated with AI assistance: Claude Code - 2026-06-10 13:00:00 UTC
+// file generated with AI assistance: Claude Code - 2026-07-01 14:45:00 UTC
 
 declare(strict_types=1);
 
@@ -8,6 +8,13 @@ namespace Dmstr\SymfonyJobQueue\Migrations;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 
+/**
+ * Create the job table.
+ *
+ * Written against the DBAL Schema API (not raw platform SQL) so Doctrine emits
+ * the correct DDL for whatever platform the consuming app runs on — MySQL,
+ * PostgreSQL or SQLite. See MigrationsPortabilityTest.
+ */
 final class Version20260516000001 extends AbstractMigration
 {
     public function getDescription(): string
@@ -17,30 +24,27 @@ final class Version20260516000001 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
-        $this->addSql(<<<'SQL'
-            CREATE TABLE job (
-                id CHAR(36) NOT NULL COMMENT '(DC2Type:guid)',
-                type VARCHAR(50) NOT NULL,
-                status VARCHAR(20) NOT NULL,
-                input_data JSON NOT NULL,
-                result_data JSON DEFAULT NULL,
-                error_message LONGTEXT DEFAULT NULL,
-                progress INT DEFAULT 0 NOT NULL,
-                started_at DATETIME DEFAULT NULL COMMENT '(DC2Type:datetime_immutable)',
-                completed_at DATETIME DEFAULT NULL COMMENT '(DC2Type:datetime_immutable)',
-                created_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
-                updated_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)',
-                INDEX IDX_FBD8E0F88CDE5729 (type),
-                INDEX IDX_FBD8E0F87B00651C (status),
-                INDEX IDX_FBD8E0F88B8E8428 (created_at),
-                INDEX IDX_FBD8E0F88CDE57297B00651C (type, status),
-                PRIMARY KEY(id)
-            ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB
-        SQL);
+        $table = $schema->createTable('job');
+        $table->addColumn('id', 'guid');
+        $table->addColumn('type', 'string', ['length' => 50]);
+        $table->addColumn('status', 'string', ['length' => 20]);
+        $table->addColumn('input_data', 'json');
+        $table->addColumn('result_data', 'json', ['notnull' => false]);
+        $table->addColumn('error_message', 'text', ['notnull' => false]);
+        $table->addColumn('progress', 'integer', ['default' => 0]);
+        $table->addColumn('started_at', 'datetime_immutable', ['notnull' => false]);
+        $table->addColumn('completed_at', 'datetime_immutable', ['notnull' => false]);
+        $table->addColumn('created_at', 'datetime_immutable');
+        $table->addColumn('updated_at', 'datetime_immutable');
+        $table->setPrimaryKey(['id']);
+        $table->addIndex(['type']);
+        $table->addIndex(['status']);
+        $table->addIndex(['created_at']);
+        $table->addIndex(['type', 'status']);
     }
 
     public function down(Schema $schema): void
     {
-        $this->addSql('DROP TABLE job');
+        $schema->dropTable('job');
     }
 }
