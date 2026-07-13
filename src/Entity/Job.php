@@ -19,11 +19,11 @@ use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity]
-#[ORM\Table(name: 'za7_job')]
-#[ORM\Index(columns: ['type'])]
-#[ORM\Index(columns: ['status'])]
-#[ORM\Index(columns: ['created_at'])]
-#[ORM\Index(columns: ['type', 'status'])]
+#[ORM\Table(name: 'dmstr_job')]
+#[ORM\Index(name: 'dmstr_job_type_idx', columns: ['type'])]
+#[ORM\Index(name: 'dmstr_job_status_idx', columns: ['status'])]
+#[ORM\Index(name: 'dmstr_job_created_at_idx', columns: ['created_at'])]
+#[ORM\Index(name: 'dmstr_job_type_status_idx', columns: ['type', 'status'])]
 #[ORM\HasLifecycleCallbacks]
 #[ApiResource(
     routePrefix: '/admin',

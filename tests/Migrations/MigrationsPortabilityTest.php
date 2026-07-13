@@ -7,6 +7,7 @@ namespace Dmstr\SymfonyJobQueue\Tests\Migrations;
 
 use Dmstr\SymfonyJobQueue\Migrations\Version20260516000001;
 use Dmstr\SymfonyJobQueue\Migrations\Version20260608210000;
+use Dmstr\SymfonyJobQueue\Migrations\Version20260713120000;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Schema\Schema;
@@ -54,18 +55,31 @@ final class MigrationsPortabilityTest extends TestCase
             $this->connection->executeStatement($query->getStatement());
         }
 
+        // Version20260713120000 — rename to dmstr_job (portable SQL).
+        $vendorPrefix = new Version20260713120000($this->connection, $logger);
+        $vendorPrefix->up($schema);
+        foreach ($vendorPrefix->getSql() as $query) {
+            $this->connection->executeStatement($query->getStatement());
+        }
+
         $sm = $this->connection->createSchemaManager();
-        self::assertTrue($sm->tablesExist(['za7_job']), 'renamed table exists');
-        self::assertFalse($sm->tablesExist(['job']), 'old table name is gone');
+        self::assertTrue($sm->tablesExist(['dmstr_job']), 'renamed table exists');
+        self::assertFalse($sm->tablesExist(['za7_job']), 'old table name is gone');
+        self::assertFalse($sm->tablesExist(['job']), 'original table name is gone');
 
         // SQLite quotes reserved-word identifiers in the introspected key, so
         // normalise before comparing.
         $columns = array_map(
             static fn (string $name): string => trim($name, '"'),
-            array_keys($sm->listTableColumns('za7_job'))
+            array_keys($sm->listTableColumns('dmstr_job'))
         );
         foreach (['id', 'type', 'status', 'input_data', 'result_data', 'error_message', 'progress', 'started_at', 'completed_at', 'created_at', 'updated_at'] as $column) {
             self::assertContains($column, $columns, sprintf('column %s exists', $column));
+        }
+
+        $indexes = array_keys($sm->listTableIndexes('dmstr_job'));
+        foreach (['dmstr_job_type_idx', 'dmstr_job_status_idx', 'dmstr_job_created_at_idx', 'dmstr_job_type_status_idx'] as $index) {
+            self::assertContains($index, $indexes, sprintf('index %s exists', $index));
         }
     }
 }
