@@ -1,6 +1,6 @@
 <?php
 
-// file generated with AI assistance: Claude Code - 2025-11-13 10:00:00
+// file generated with AI assistance: Claude Code - 2026-10-08 13:38:06 UTC
 
 namespace Dmstr\SymfonyJobQueue\Entity;
 
@@ -42,7 +42,7 @@ use Symfony\Component\Uid\Uuid;
     'errorMessage' => 'partial',
 ])]
 #[ApiFilter(DateFilter::class, properties: ['startedAt', 'completedAt', 'createdAt', 'updatedAt'])]
-#[ApiFilter(OrderFilter::class, properties: ['id', 'type', 'status', 'progress', 'startedAt', 'completedAt', 'createdAt', 'updatedAt'])]
+#[ApiFilter(OrderFilter::class, properties: ['type', 'status', 'progress', 'startedAt', 'completedAt', 'createdAt', 'updatedAt'])]
 class Job
 {
     #[ORM\Id]
