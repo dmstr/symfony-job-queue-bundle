@@ -30,14 +30,40 @@ final class JobResourceAccessTest extends WebTestCase
     }
 
     #[DataProvider('operations')]
-    public function testRoleUserIsAllowed(string $operation, string $path): void
+    public function testMappedRoleIsAllowed(string $operation, string $path): void
     {
         $client = $this->createClientWithMap();
 
-        $this->request($client, $path, 'ROLE_USER');
+        $this->request($client, $path, 'ROLE_JOB_TEST_READER');
 
         self::assertResponseStatusCodeSame(200);
         $this->assertBodyContainsJob($operation, $client);
+    }
+
+    /**
+     * @return iterable<string, array{string, string, string, array<string, list<string>>|null}>
+     */
+    public static function forbiddenCases(): iterable
+    {
+        foreach (self::operations() as $label => [$operation, $path]) {
+            yield "$label: only ROLE_USER" => [$operation, $path, 'ROLE_USER', null];
+            yield "$label: unmapped ROLE_ADMIN" => [$operation, $path, 'ROLE_ADMIN', null];
+            yield "$label: empty map" => [$operation, $path, 'ROLE_JOB_TEST_READER', []];
+            yield "$label: permission without roles" => [$operation, $path, 'ROLE_JOB_TEST_READER', ['job:read' => []]];
+        }
+    }
+
+    /**
+     * @param array<string, list<string>>|null $map
+     */
+    #[DataProvider('forbiddenCases')]
+    public function testUnmappedAccessIsForbidden(string $operation, string $path, string $roles, ?array $map): void
+    {
+        $client = $this->createClientWithMap($map);
+
+        $this->request($client, $path, $roles);
+
+        self::assertResponseStatusCodeSame(403);
     }
 
     #[DataProvider('operations')]

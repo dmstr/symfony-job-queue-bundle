@@ -13,6 +13,7 @@ use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\OpenApi\Model\Operation;
+use Dmstr\SymfonyJobQueue\Security\JobPermissions;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Attribute\Groups;
@@ -31,7 +32,7 @@ use Symfony\Component\Uid\Uuid;
         new Get(),
         new GetCollection(),
     ],
-    security: "is_granted('ROLE_USER')",
+    security: "is_granted('" . JobPermissions::READ . "')",
     normalizationContext: ['groups' => ['job:read']],
     paginationItemsPerPage: 30,
     openapi: new Operation(tags: ['System'])
