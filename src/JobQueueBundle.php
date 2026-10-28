@@ -31,6 +31,12 @@ final class JobQueueBundle extends AbstractBundle
         ContainerConfigurator $container,
         ContainerBuilder $builder,
     ): void {
+        // ContainerConfigurator::extension() throws while prepending if the
+        // extension is not registered, so skip without DoctrineMigrationsBundle.
+        if (!$builder->hasExtension('doctrine_migrations')) {
+            return;
+        }
+
         $container->extension('doctrine_migrations', [
             'migrations_paths' => [
                 'Dmstr\\SymfonyJobQueue\\Migrations' => __DIR__ . '/../migrations',
