@@ -18,3 +18,9 @@ services:
         autowire: true
         tags:
             - { name: messenger.message_handler }
+
+    # Announces the permission this bundle checks to the za7-core permission
+    # voter (container tag, plain string; inert without za7-core).
+    Dmstr\SymfonyJobQueue\Security\JobPermissions:
+        tags:
+            - { name: za7_core.permission, permission: !php/const Dmstr\SymfonyJobQueue\Security\JobPermissions::READ }
