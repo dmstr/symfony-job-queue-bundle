@@ -8,7 +8,7 @@ namespace Dmstr\SymfonyJobQueue\Tests\Functional\App;
 use ApiPlatform\Symfony\Bundle\ApiPlatformBundle;
 use Dmstr\OpenApiJsonSchema\OpenApiJsonSchemaBundle;
 use Dmstr\OpenApiJsonSchema\Service\OperationInputSchemaResolver;
-use Dmstr\SymfonyJobQueue\JobQueueBundle;
+use Dmstr\SymfonyJobQueue\SymfonyJobQueueBundle;
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
 use Doctrine\Bundle\MigrationsBundle\DoctrineMigrationsBundle;
 use Psr\Log\NullLogger;
@@ -51,7 +51,7 @@ final class TestKernel extends Kernel
         yield new DoctrineMigrationsBundle();
         yield new ApiPlatformBundle();
         yield new OpenApiJsonSchemaBundle();
-        yield new JobQueueBundle();
+        yield new SymfonyJobQueueBundle();
     }
 
     public function getProjectDir(): string

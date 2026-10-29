@@ -10,7 +10,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 
-final class JobQueueBundle extends AbstractBundle
+final class SymfonyJobQueueBundle extends AbstractBundle
 {
     protected string $extensionAlias = 'dmstr_symfony_job_queue';
 
