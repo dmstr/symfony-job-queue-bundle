@@ -7,7 +7,7 @@ namespace Dmstr\SymfonyJobQueue\Tests\Security;
 
 use ApiPlatform\Metadata\ApiResource;
 use Dmstr\SymfonyJobQueue\Entity\Job;
-use Dmstr\SymfonyJobQueue\JobQueueBundle;
+use Dmstr\SymfonyJobQueue\SymfonyJobQueueBundle;
 use Dmstr\SymfonyJobQueue\Security\JobPermissions;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -64,7 +64,7 @@ final class PermissionRegistrationTest extends TestCase
         $builder = new ContainerBuilder();
         $builder->setParameter('kernel.environment', 'test');
         $builder->setParameter('kernel.build_dir', sys_get_temp_dir());
-        (new JobQueueBundle())->getContainerExtension()->load([], $builder);
+        (new SymfonyJobQueueBundle())->getContainerExtension()->load([], $builder);
 
         return $builder->findTaggedServiceIds('za7_core.permission');
     }

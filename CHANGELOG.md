@@ -6,6 +6,16 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). While the major version is 0, a minor release may contain breaking changes.
 
+## [0.5.0] - 2026-10-29
+
+### Changed
+
+- **BREAKING:** the bundle class is renamed from `Dmstr\SymfonyJobQueue\JobQueueBundle` to `Dmstr\SymfonyJobQueue\SymfonyJobQueueBundle`. Symfony Flex registers a bundle without its own recipe only under the class name it derives from the PSR-4 namespace (`Dmstr\SymfonyJobQueue` → `SymfonyJobQueueBundle`); under the old name a new application never got the bundle in `config/bundles.php`, and with the za7-core default permission map the container build then failed with `Unknown permissions`. The configuration key and all services are unchanged.
+
+### Migration
+
+Replace `Dmstr\SymfonyJobQueue\JobQueueBundle::class` with `Dmstr\SymfonyJobQueue\SymfonyJobQueueBundle::class` in `config/bundles.php`. There is no alias for the old name.
+
 ## [0.4.0] - 2026-10-28
 
 ### Changed
