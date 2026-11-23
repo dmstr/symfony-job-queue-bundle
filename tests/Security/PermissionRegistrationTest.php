@@ -9,6 +9,7 @@ use ApiPlatform\Metadata\ApiResource;
 use Dmstr\SymfonyJobQueue\Entity\Job;
 use Dmstr\SymfonyJobQueue\SymfonyJobQueueBundle;
 use Dmstr\SymfonyJobQueue\Security\JobPermissions;
+use Dmstr\SymfonyJobQueue\State\JobPruneProcessor;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
@@ -17,18 +18,17 @@ final class PermissionRegistrationTest extends TestCase
     /** Copied from za7-core. */
     private const PERMISSION_PATTERN = '/^[a-z][a-z0-9]*:[a-z][a-z0-9_]*$/';
 
-    public function testExactlyOneTagWithTheReadPermission(): void
+    public function testOneCarrierWithTheReadAndPrunePermissions(): void
     {
         $tagged = $this->taggedServices();
-
         self::assertCount(1, $tagged);
-        $tags = array_values($tagged)[0];
-        self::assertCount(1, $tags);
-        $permission = $tags[0]['permission'] ?? null;
-        self::assertIsString($permission);
-        self::assertSame(JobPermissions::READ, $permission);
-        self::assertSame('job:read', $permission);
-        self::assertMatchesRegularExpression(self::PERMISSION_PATTERN, $permission);
+        $permissions = array_column(array_values($tagged)[0], 'permission');
+
+        self::assertSame([JobPermissions::READ, JobPermissions::PRUNE], $permissions);
+        self::assertSame(['job:read', 'job:prune'], $permissions);
+        foreach ($permissions as $permission) {
+            self::assertMatchesRegularExpression(self::PERMISSION_PATTERN, $permission);
+        }
     }
 
     public function testResourceSecurityChecksTheRegisteredPermission(): void
@@ -46,12 +46,15 @@ final class PermissionRegistrationTest extends TestCase
         self::assertNull((new \ReflectionClass(JobPermissions::class))->getConstructor());
     }
 
-    public function testOperationsCarryNoOwnSecurity(): void
+    public function testOnlyThePruneOperationCarriesOwnSecurity(): void
     {
         $operations = $this->resource()->getOperations();
-
         self::assertNotEmpty($operations);
         foreach ($operations as $operation) {
+            if ($operation->getName() === JobPruneProcessor::OPERATION) {
+                self::assertSame("is_granted('job:prune')", $operation->getSecurity());
+                continue;
+            }
             self::assertNull($operation->getSecurity());
         }
     }

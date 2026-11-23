@@ -19,6 +19,8 @@ final class SymfonyJobQueueBundle extends AbstractBundle
         ContainerConfigurator $container,
         ContainerBuilder $builder,
     ): void {
+        // Root of the bundle, for the input schemas next to its entities
+        $builder->setParameter('dmstr_job_queue.dir', \dirname(__DIR__));
         $container->import(__DIR__ . '/../config/services.yaml');
     }
 

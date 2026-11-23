@@ -24,3 +24,29 @@ services:
     Dmstr\SymfonyJobQueue\Security\JobPermissions:
         tags:
             - { name: za7_core.permission, permission: !php/const Dmstr\SymfonyJobQueue\Security\JobPermissions::READ }
+            - { name: za7_core.permission, permission: !php/const Dmstr\SymfonyJobQueue\Security\JobPermissions::PRUNE }
+
+    # Retention of finished jobs: REST operation, CLI mirror and a message for
+    # the application's scheduler share the pruner.
+    Dmstr\SymfonyJobQueue\Service\JobPruner: ~
+
+    Dmstr\SymfonyJobQueue\State\JobPruneProcessor:
+        tags: ['api_platform.state_processor']
+
+    Dmstr\SymfonyJobQueue\Command\PruneJobsCommand:
+        tags: ['console.command']
+
+    Dmstr\SymfonyJobQueue\MessageHandler\PruneJobsHandler:
+        tags: [messenger.message_handler]
+
+    # Input schemas next to the entity (Entity/Job/prune.input.json) for the
+    # OpenAPI request body and the validation of REST and CLI input. The
+    # application's resolver does not see this directory.
+    dmstr_job_queue.input_schema_resolver:
+        class: Dmstr\OpenApiJsonSchema\Service\OperationInputSchemaResolver
+        arguments:
+            $schemaBasePaths: []
+            $entityResolutionRoots:
+                - ['%dmstr_job_queue.dir%/src/Entity', 'Dmstr\SymfonyJobQueue\Entity']
+        tags:
+            - { name: dmstr_openapi_json_schema.input_resolver, priority: 10 }

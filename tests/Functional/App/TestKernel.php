@@ -30,7 +30,10 @@ final class TestKernel extends Kernel
 {
     use MicroKernelTrait;
 
-    public const DEFAULT_PERMISSION_MAP = ['job:read' => ['ROLE_JOB_TEST_READER']];
+    public const DEFAULT_PERMISSION_MAP = [
+        'job:read' => ['ROLE_JOB_TEST_READER'],
+        'job:prune' => ['ROLE_JOB_TEST_PRUNER'],
+    ];
 
     /**
      * @param array<string, list<string>> $permissionMap permission => role names that grant it

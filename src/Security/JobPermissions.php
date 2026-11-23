@@ -16,4 +16,7 @@ namespace Dmstr\SymfonyJobQueue\Security;
 final class JobPermissions
 {
     public const string READ = 'job:read';
+
+    /** Delete finished jobs (POST /admin/jobs/prune, app:jobs:prune) */
+    public const string PRUNE = 'job:prune';
 }
