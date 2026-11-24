@@ -12,8 +12,11 @@ use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
 use ApiPlatform\OpenApi\Model\Operation;
+use Dmstr\SymfonyJobQueue\Dto\PruneResult;
 use Dmstr\SymfonyJobQueue\Security\JobPermissions;
+use Dmstr\SymfonyJobQueue\State\JobPruneProcessor;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Attribute\Groups;
@@ -31,6 +34,21 @@ use Symfony\Component\Uid\Uuid;
     operations: [
         new Get(),
         new GetCollection(),
+        // Retention: deletes finished jobs older than `days` (input schema
+        // Job/prune.input.json); mirrored by `app:jobs:prune`
+        new Post(
+            uriTemplate: '/jobs/prune',
+            name: JobPruneProcessor::OPERATION,
+            description: 'Delete completed and failed jobs older than a number of days',
+            processor: JobPruneProcessor::class,
+            deserialize: false,
+            validate: false,
+            read: false,
+            output: PruneResult::class,
+            normalizationContext: ['groups' => [PruneResult::GROUP]],
+            status: 200,
+            security: "is_granted('" . JobPermissions::PRUNE . "')",
+        ),
     ],
     security: "is_granted('" . JobPermissions::READ . "')",
     normalizationContext: ['groups' => ['job:read']],

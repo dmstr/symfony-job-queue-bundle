@@ -69,6 +69,22 @@ The bundle has no config node, no role map and no dependency on za7-core. Who ho
 
 Without za7-core the tag is inert. Unless another voter in the application supports the attribute `job:read`, every request to the job resource gets 403 (fail-closed). To use the bundle without za7-core, add a voter for `job:read`.
 
+## Pruning finished jobs
+
+Every job stays in `dmstr_job` with its input and result after it has finished. Three entry points delete the `completed` and `failed` jobs created more than `days` days ago (default 30); `pending` and `running` jobs are never deleted:
+
+| Entry point | Input |
+|---|---|
+| `POST /api/admin/jobs/prune` (operation `job_prune`, permission `job:prune`) | `{"days": 30, "dryRun": false}`, schema `src/Entity/Job/prune.input.json`, published as the OpenAPI request body |
+| `bin/console app:jobs:prune --days=30 [--dry-run]` | validated against the same schema |
+| message `Dmstr\SymfonyJobQueue\Message\PruneJobs(days: 30)` | for the application's scheduler, e.g. `RecurringMessage::every('1 day', new PruneJobs())` |
+
+The response (and the dry run) reports `days`, `before` and the number of jobs `deleted` (or to be deleted). Rows are deleted in batches of 1000 ids by `created_at`, the indexed column.
+
+On MySQL the first run on a large table writes every deleted row, JSON payload included, to the binary log; check the free disk space and start with `--dry-run`. InnoDB keeps the freed space in the table file: `OPTIMIZE TABLE dmstr_job` returns it to the file system after a large first run.
+
+The permission `job:prune` is registered for za7-core like `job:read`; without a role map entry it falls back to the za7-core default `[ROLE_ADMIN]`.
+
 ## Migrations
 
 If DoctrineMigrationsBundle is registered, the bundle prepends `doctrine_migrations.migrations_paths` with the namespace `Dmstr\SymfonyJobQueue\Migrations`, so `doctrine:migrations:migrate` creates the table `dmstr_job`. Without DoctrineMigrationsBundle nothing is prepended and the schema has to be created by the application.

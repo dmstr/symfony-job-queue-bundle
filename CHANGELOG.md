@@ -6,6 +6,18 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). While the major version is 0, a minor release may contain breaking changes.
 
+## [0.6.0] - 2026-11-24
+
+### Added
+
+- Pruning of finished jobs: `POST /api/admin/jobs/prune` (operation `job_prune`, input schema `src/Entity/Job/prune.input.json` with `days`, default 30, and `dryRun`), its CLI mirror `app:jobs:prune --days --dry-run` and the message `PruneJobs` for a scheduler. Deletes `completed` and `failed` jobs created more than `days` days ago in batches; `pending` and `running` jobs stay.
+- Permission `job:prune`, registered for za7-core next to `job:read`.
+- The bundle registers its own input-schema resolver (`dmstr_job_queue.input_schema_resolver`) for the schemas next to its entity.
+
+### Changed
+
+- Requires `dmstr/openapi-json-schema-bundle` ^0.5.0 (`InputSchemaValidator`).
+
 ## [0.5.0] - 2026-10-29
 
 ### Changed
