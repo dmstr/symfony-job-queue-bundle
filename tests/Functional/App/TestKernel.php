@@ -7,7 +7,6 @@ namespace Dmstr\SymfonyJobQueue\Tests\Functional\App;
 
 use ApiPlatform\Symfony\Bundle\ApiPlatformBundle;
 use Dmstr\OpenApiJsonSchema\OpenApiJsonSchemaBundle;
-use Dmstr\OpenApiJsonSchema\Service\OperationInputSchemaResolver;
 use Dmstr\SymfonyJobQueue\SymfonyJobQueueBundle;
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
 use Doctrine\Bundle\MigrationsBundle\DoctrineMigrationsBundle;
@@ -130,8 +129,6 @@ final class TestKernel extends Kernel
         // Without Monolog the framework logger writes to stderr and floods the test output.
         $services->set('logger', NullLogger::class);
         $services->set(TestAuthenticator::class);
-        $services->set(OperationInputSchemaResolver::class)
-            ->args(['$schemaBasePaths' => []]);
         $services->set(MapPermissionVoter::class)
             ->args([
                 '$registered' => '%test.registered_permissions%',

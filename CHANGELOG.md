@@ -6,6 +6,24 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). While the major version is 0, a minor release may contain breaking changes.
 
+## [0.7.0] - 2026-11-25
+
+### Changed
+
+- `JobQueueService::createAndDispatch()` validates the input through `InputSchemaValidator` of openapi-json-schema-bundle instead of its own copy of the validation (#8). As before, validation runs only when an operation name is given, and before the job is persisted and dispatched; on failure no job row is written and no `JobMessage` is dispatched.
+- **BREAKING:** an operation name without an input schema throws `\LogicException('No input schema for operation "…"')` (HTTP 500 through the API, no job created) instead of silently skipping validation. `\LogicException` is not a `\RuntimeException`, so callers catching `\RuntimeException` do not catch this case.
+- **BREAKING:** invalid input throws `UnprocessableEntityHttpException` (HTTP 422) instead of `BadRequestHttpException` (HTTP 400). The message keeps the prefix `Input validation failed for operation "%s": `; the error list after it is compact JSON instead of pretty-printed, and `/` is no longer escaped (`"/days"` instead of `"\/days"`), which matters to clients parsing the message text.
+- **BREAKING:** the schema is resolved through the whole resolver chain of openapi-json-schema-bundle (`InputSchemaResolverInterface`, members tagged `dmstr_openapi_json_schema.input_resolver`), so application resolvers apply as well, instead of only the file-based convention of `OperationInputSchemaResolver`.
+- A schema file that cannot be read or is not valid JSON counts as "no schema" (`\LogicException`) instead of throwing `\RuntimeException('Invalid JSON schema file: …')`.
+- Empty input `[]` is validated as an empty JSON object instead of an empty list.
+- Non-empty input that cannot be encoded as JSON (e.g. strings with invalid UTF-8) throws `\JsonException`, because the validator encodes the input with `JSON_THROW_ON_ERROR`.
+- `JobQueueService` takes `InputSchemaValidator` instead of `OperationInputSchemaResolver` as third constructor argument (autowired); the bundle no longer needs a service `OperationInputSchemaResolver` registered under its class name.
+- Requires `dmstr/openapi-json-schema-bundle` `^0.5.0 || ^0.6.0`. `opis/json-schema` is no longer a direct requirement; it comes in through openapi-json-schema-bundle.
+
+### Migration
+
+Provide an input schema, through a resolver tagged `dmstr_openapi_json_schema.input_resolver`, for every operation whose name is passed to `createAndDispatch()`, or pass no operation name for free-form input. Switch clients and tests that expect 400 on invalid input to 422, and adjust anything that parses the error list in the message or catches `\RuntimeException` around job creation.
+
 ## [0.6.1] - 2026-11-25
 
 ### Fixed
@@ -87,6 +105,7 @@ Replace `Dmstr\SymfonyJobQueue\JobQueueBundle::class` with `Dmstr\SymfonyJobQueu
 
 - Initial release.
 
+[0.7.0]: https://github.com/dmstr/symfony-job-queue-bundle/compare/0.6.1...0.7.0
 [0.6.1]: https://github.com/dmstr/symfony-job-queue-bundle/compare/0.6.0...0.6.1
 [0.6.0]: https://github.com/dmstr/symfony-job-queue-bundle/compare/0.5.0...0.6.0
 [0.5.0]: https://github.com/dmstr/symfony-job-queue-bundle/compare/0.4.0...0.5.0

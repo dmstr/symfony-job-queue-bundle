@@ -5,7 +5,7 @@
 Persisted job tracking on top of Symfony Messenger. The bundle stores every dispatched job in a Doctrine entity, validates its input against a JSON schema, runs it asynchronously through a Messenger handler and exposes the jobs as a read-only API Platform resource.
 
 - `Job` Doctrine entity with status, payload, timestamps and result
-- `JobQueueService::dispatch()` validates the input, persists the job and dispatches it to Messenger
+- `JobQueueService::createAndDispatch()` validates the input, persists the job and dispatches it to Messenger
 - `JobMessage` / `JobMessageHandler` wrap the asynchronous execution
 - Status transitions: `pending → running → done | failed`
 - `Job` is exposed as read-only API Platform resource under `/admin/jobs`, guarded by the permission `job:read`
@@ -14,7 +14,7 @@ Persisted job tracking on top of Symfony Messenger. The bundle stores every disp
 
     composer require dmstr/symfony-job-queue-bundle
 
-Requires PHP >= 8.5 and Symfony 7. Besides the Symfony packages (framework-bundle, messenger, uid) and Doctrine ORM with DoctrineBundle, the bundle declares `dmstr/openapi-json-schema-bundle` and `opis/json-schema` as runtime dependencies, because `JobQueueService` uses them. They pull `api-platform/metadata`, `json-schema` and `openapi` in at runtime; applications built on za7-core already have all of this.
+Requires PHP >= 8.5 and Symfony 7. Besides the Symfony packages (framework-bundle, messenger, uid) and Doctrine ORM with DoctrineBundle, the bundle declares `dmstr/openapi-json-schema-bundle` as runtime dependency, because `JobQueueService`, the prune operation and its command validate input through its `InputSchemaValidator`. It pulls `opis/json-schema` and `api-platform/metadata`, `json-schema` and `openapi` in at runtime; applications built on za7-core already have all of this.
 
 ## Configuration
 
@@ -38,9 +38,24 @@ The application has to provide four things.
                 paths:
                     - '%kernel.project_dir%/vendor/dmstr/symfony-job-queue-bundle/src/Entity'
 
-3. The service `Dmstr\OpenApiJsonSchema\Service\OperationInputSchemaResolver` must be registered. za7-core does this; without it, register the service yourself.
+3. `Dmstr\OpenApiJsonSchema\OpenApiJsonSchemaBundle` must be registered, because `JobQueueService` uses its `InputSchemaValidator`. The input schemas of the application's operations reach the validator through a resolver tagged `dmstr_openapi_json_schema.input_resolver` (za7-core registers one); without one, creating a job with an operation name throws a `\LogicException`, see [Input validation](#input-validation).
 
 4. Messenger must be enabled, because `JobQueueService` needs `MessageBusInterface`.
+
+## Input validation
+
+`JobQueueService::createAndDispatch(string $type, array $inputData, ?string $operationName = null)` validates the input through `Dmstr\OpenApiJsonSchema\Service\InputSchemaValidator` when an operation name is given. The schema comes from the input-schema resolver chain of openapi-json-schema-bundle (`InputSchemaResolverInterface`, members tagged `dmstr_openapi_json_schema.input_resolver`), the same chain that documents the OpenAPI request body. Validation runs before the job is persisted: on failure no job row is written and no `JobMessage` is dispatched.
+
+| Case | Result |
+|---|---|
+| no operation name (`null`) | no validation, the job is created |
+| valid input | the job is created with the input unchanged |
+| empty input `[]` | validated as an empty object |
+| invalid input | `UnprocessableEntityHttpException` (HTTP 422), message `Input validation failed for operation "<name>": <errors>` with a compact JSON error list |
+| no schema resolved for the operation, or the schema file is unreadable or not valid JSON | `\LogicException('No input schema for operation "<name>"')`, HTTP 500 through the API |
+| input that cannot be encoded as JSON (e.g. invalid UTF-8) | `\JsonException` |
+
+Every operation whose name is passed when creating a job therefore needs an input schema; for free-form input, pass no operation name.
 
 ## The job resource
 
