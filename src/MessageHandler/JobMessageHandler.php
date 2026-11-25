@@ -52,7 +52,7 @@ class JobMessageHandler
                 'job_id' => $jobId,
                 'type' => $job->getType()
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             // Update status to failed
             $job->setStatus('failed');
             $job->setCompletedAt(new \DateTimeImmutable());
