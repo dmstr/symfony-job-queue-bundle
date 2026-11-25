@@ -5,13 +5,10 @@ declare(strict_types=1);
 
 namespace Dmstr\SymfonyJobQueue\Service;
 
+use Dmstr\OpenApiJsonSchema\Service\InputSchemaValidator;
 use Dmstr\SymfonyJobQueue\Entity\Job;
 use Dmstr\SymfonyJobQueue\Message\JobMessage;
-use Dmstr\OpenApiJsonSchema\Service\OperationInputSchemaResolver;
 use Doctrine\ORM\EntityManagerInterface;
-use Opis\JsonSchema\Errors\ErrorFormatter;
-use Opis\JsonSchema\Validator;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Messenger\MessageBusInterface;
 
 class JobQueueService
@@ -19,27 +16,32 @@ class JobQueueService
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly MessageBusInterface $messageBus,
-        private readonly OperationInputSchemaResolver $schemaResolver,
+        private readonly InputSchemaValidator $validator,
     ) {
     }
 
     /**
      * Create a job and dispatch it to the queue.
      *
-     * @param string                $type          Job type (e.g. "project_scan").
-     * @param array<string,mixed>   $inputData     Decoded request body.
-     * @param string|null           $operationName API Platform operation name
-     *                                             (e.g. "ref_project_scan").
-     *                                             When provided, the input is
-     *                                             validated against the matching
-     *                                             JSON-Schema in `config/schemas/`.
+     * When an operation name is given, the input is validated through
+     * {@see InputSchemaValidator} against the schema the input-schema resolver
+     * chain of openapi-json-schema-bundle resolves for that operation, before
+     * the job is persisted or dispatched. Without an operation name the input
+     * is not validated.
      *
-     * @throws \InvalidArgumentException on validation failure.
+     * @param string              $type          Job type (e.g. "project_scan").
+     * @param array<string,mixed> $inputData     Decoded request body.
+     * @param string|null         $operationName API Platform operation name
+     *                                           (e.g. "ref_project_scan").
+     *
+     * @throws \Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException when the input violates the schema (HTTP 422)
+     * @throws \LogicException when no input schema is resolved for the operation
+     * @throws \JsonException when the input cannot be encoded as JSON (e.g. invalid UTF-8)
      */
     public function createAndDispatch(string $type, array $inputData, ?string $operationName = null): Job
     {
         if (null !== $operationName) {
-            $this->validateAgainstOperationSchema($operationName, $inputData);
+            $this->validator->validate($operationName, $inputData);
         }
 
         $job = new Job();
@@ -53,36 +55,5 @@ class JobQueueService
         $this->messageBus->dispatch(new JobMessage($job->getId()));
 
         return $job;
-    }
-
-    /**
-     * @param array<string,mixed> $data
-     */
-    private function validateAgainstOperationSchema(string $operationName, array $data): void
-    {
-        $schemaFile = $this->schemaResolver->getSchemaFile($operationName);
-        if (null === $schemaFile) {
-            // Operation has no input schema — skip validation (caller decided
-            // the body is free-form).
-            return;
-        }
-
-        $schema = json_decode((string) file_get_contents($schemaFile));
-        if (!\is_object($schema)) {
-            throw new \RuntimeException(sprintf('Invalid JSON schema file: %s', $schemaFile));
-        }
-
-        $validator = new Validator();
-        $result = $validator->validate(json_decode(json_encode($data)), $schema);
-
-        if (!$result->isValid()) {
-            $errors = (new ErrorFormatter())->format($result->error());
-
-            throw new BadRequestHttpException(sprintf(
-                'Input validation failed for operation "%s": %s',
-                $operationName,
-                json_encode($errors, JSON_PRETTY_PRINT),
-            ));
-        }
     }
 }
