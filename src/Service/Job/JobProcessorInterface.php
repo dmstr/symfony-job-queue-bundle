@@ -16,7 +16,7 @@ interface JobProcessorInterface
     /**
      * Process the job and update its state
      *
-     * @throws \Exception if processing fails
+     * @throws \Throwable if processing fails
      */
     public function process(Job $job): void;
 }
