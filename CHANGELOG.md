@@ -6,6 +6,12 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). While the major version is 0, a minor release may contain breaking changes.
 
+## [0.8.0] - 2026-11-27
+
+### Changed
+
+- The prune operation (`POST /api/admin/jobs/prune`, operation `job_prune`) carries `extraProperties: ['custom_action' => true]`. api-platform-utils-bundle 0.6 and 0.7 ignore the key; 0.8, which classifies custom actions by this marker only ([changelog](https://github.com/dmstr/api-platform-utils-bundle/blob/master/CHANGELOG.md), 0.8.0 (2026-11-26)), lists the prune action again as a custom action (`schema:Action`) in the Hydra documentation and the actions menu of the admin UI, where it would disappear without the marker. No migration needed; what prune does is unchanged.
+
 ## [0.7.0] - 2026-11-25
 
 ### Changed
@@ -105,6 +111,7 @@ Replace `Dmstr\SymfonyJobQueue\JobQueueBundle::class` with `Dmstr\SymfonyJobQueu
 
 - Initial release.
 
+[0.8.0]: https://github.com/dmstr/symfony-job-queue-bundle/compare/0.7.0...0.8.0
 [0.7.0]: https://github.com/dmstr/symfony-job-queue-bundle/compare/0.6.1...0.7.0
 [0.6.1]: https://github.com/dmstr/symfony-job-queue-bundle/compare/0.6.0...0.6.1
 [0.6.0]: https://github.com/dmstr/symfony-job-queue-bundle/compare/0.5.0...0.6.0

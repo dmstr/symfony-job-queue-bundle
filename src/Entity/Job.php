@@ -35,10 +35,13 @@ use Symfony\Component\Uid\Uuid;
         new Get(),
         new GetCollection(),
         // Retention: deletes finished jobs older than `days` (input schema
-        // Job/prune.input.json); mirrored by `app:jobs:prune`
+        // Job/prune.input.json); mirrored by `app:jobs:prune`; marked as
+        // `custom_action`, because api-platform-utils-bundle 0.8+ classifies
+        // custom actions by this marker only
         new Post(
             uriTemplate: '/jobs/prune',
             name: JobPruneProcessor::OPERATION,
+            extraProperties: ['custom_action' => true],
             description: 'Delete completed and failed jobs older than a number of days',
             processor: JobPruneProcessor::class,
             deserialize: false,
