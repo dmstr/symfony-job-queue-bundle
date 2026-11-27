@@ -96,6 +96,8 @@ Every job stays in `dmstr_job` with its input and result after it has finished. 
 
 The response (and the dry run) reports `days`, `before` and the number of jobs `deleted` (or to be deleted). Rows are deleted in batches of 1000 ids by `created_at`, the indexed column.
 
+`POST /api/admin/jobs/prune` is marked with `extraProperties: ['custom_action' => true]`, so clients on api-platform-utils-bundle 0.8+ list it as a `schema:Action`, a custom action in the Hydra documentation and in the actions menu of the admin UI.
+
 On MySQL the first run on a large table writes every deleted row, JSON payload included, to the binary log; check the free disk space and start with `--dry-run`. InnoDB keeps the freed space in the table file: `OPTIMIZE TABLE dmstr_job` returns it to the file system after a large first run.
 
 The permission `job:prune` is registered for za7-core like `job:read`; without a role map entry it falls back to the za7-core default `[ROLE_ADMIN]`.
